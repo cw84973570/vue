@@ -3,8 +3,8 @@
  * dynamically accessing methods on Array prototype
  */
 
+// 测试远程提交
 import { def } from '../util/index'
-
 const arrayProto = Array.prototype
 export const arrayMethods = Object.create(arrayProto)
 
