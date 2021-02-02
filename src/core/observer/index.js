@@ -40,6 +40,7 @@ export class Observer {
   vmCount: number; // number of vms that have this object as root $data
 
   constructor (value: any) {
+    console.log('observer value', value)
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
@@ -77,6 +78,7 @@ export class Observer {
    */
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
+      // 这里只有数组元素是引用类型才继续监听
       observe(items[i])
     }
   }
@@ -112,6 +114,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * or the existing observer if the value already has one.
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
+  // 是对象才继续遍历深度监听,通过typeof判断
   if (!isObject(value) || value instanceof VNode) {
     return
   }
@@ -160,7 +163,7 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  console.log(val)
   let childOb = !shallow && observe(val) // 深度监听
   Object.defineProperty(obj, key, {
     enumerable: true,

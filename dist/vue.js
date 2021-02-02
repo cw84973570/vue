@@ -942,6 +942,7 @@
    * collect dependencies and dispatch updates.
    */
   var Observer = function Observer (value) {
+    console.log('observer value', value);
     this.value = value;
     this.dep = new Dep();
     this.vmCount = 0;
@@ -979,6 +980,7 @@
    */
   Observer.prototype.observeArray = function observeArray (items) {
     for (var i = 0, l = items.length; i < l; i++) {
+      // 这里只有数组元素是引用类型才继续监听
       observe(items[i]);
     }
   };
@@ -1013,6 +1015,7 @@
    * or the existing observer if the value already has one.
    */
   function observe (value, asRootData) {
+    // 是对象才继续遍历深度监听,通过typeof判断
     if (!isObject(value) || value instanceof VNode) {
       return
     }
@@ -1061,7 +1064,7 @@
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
-
+    console.log(val);
     var childOb = !shallow && observe(val); // 深度监听
     Object.defineProperty(obj, key, {
       enumerable: true,
@@ -4513,9 +4516,6 @@
     var vm = this.vm;
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
-      // 这里好像拿的是属性的副本，所以不会触发源属性自身的getter
-      // 真正的属性在vm._data下
-      value = this.getter.call(vm, vm);
       value = this.getter.call(vm, vm);
     } catch (e) {
       if (this.user) {

@@ -12,6 +12,7 @@
     <span v-else>点击次数已达上限</span>
     <button @click="change" v-if="count !== 3">修改</button>
     <button @click="count=0;message='共点击了0次'" v-else>重置</button>
+    <child @change="change"></child>
   </div>
 </body>
 <script src="./index.js"></script>

@@ -108,9 +108,6 @@ export default class Watcher {
     const vm = this.vm
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
-      // 这里好像拿的是属性的副本，所以不会触发源属性自身的getter
-      // 真正的属性在vm._data下
-      value = this.getter.call(vm, vm)
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
