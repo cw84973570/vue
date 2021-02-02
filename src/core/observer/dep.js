@@ -10,6 +10,8 @@ let uid = 0
  * A dep is an observable that can have multiple
  * directives subscribing to it.
  */
+// 通过Dep通知watcher数据更新，依赖管理器
+// 挂载在Observe上面
 export default class Dep {
   static target: ?Watcher;
   id: number;
@@ -55,12 +57,21 @@ export default class Dep {
 Dep.target = null
 const targetStack = []
 
+// target是当前处理的watcher
+// targetStack好像永远只有一个元素？
 export function pushTarget (target: ?Watcher) {
+  // 将当前元素加入到目标栈中
+  // target不是必传参数
+  console.log('watcher', target)
   targetStack.push(target)
   Dep.target = target
 }
 
 export function popTarget () {
+  // 处理完成弹出完成的watcher
+  // 将下一个watch挂载到Dep上
+  // 好像每次targetStack里只有一个元素
+  // 所以targetStack[targetStack.length - 1]是undefined
   targetStack.pop()
   Dep.target = targetStack[targetStack.length - 1]
 }

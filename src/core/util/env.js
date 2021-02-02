@@ -18,6 +18,7 @@ export const isPhantomJS = UA && /phantomjs/.test(UA)
 export const isFF = UA && UA.match(/firefox\/(\d+)/)
 
 // Firefox has a "watch" function on Object.prototype...
+// {} 好像在某些环境下会被解析成代码块，而不是空对象。
 export const nativeWatch = ({}).watch
 
 export let supportsPassive = false

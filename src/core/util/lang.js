@@ -30,6 +30,8 @@ export function def (obj: Object, key: string, val: any, enumerable?: boolean) {
 /**
  * Parse simple path.
  */
+// 返回一个根据路径返回属性的函数
+// 例如form.status，则该函数返回form.status的值
 const bailRE = new RegExp(`[^${unicodeRegExp.source}.$_\\d]`)
 export function parsePath (path: string): any {
   if (bailRE.test(path)) {

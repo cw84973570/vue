@@ -11,6 +11,8 @@ const seenObjects = new Set()
  * getters, so that every nested property inside the object
  * is collected as a "deep" dependency.
  */
+// traverse: to move across, over, or through something, especially an area of land or water
+// 深度遍历触发getters
 export function traverse (val: any) {
   _traverse(val, seenObjects)
   seenObjects.clear()
@@ -19,6 +21,7 @@ export function traverse (val: any) {
 function _traverse (val: any, seen: SimpleSet) {
   let i, keys
   const isA = Array.isArray(val)
+  // val不是数组或对象，或val被冻结，或vue是VNode的实例，则return
   if ((!isA && !isObject(val)) || Object.isFrozen(val) || val instanceof VNode) {
     return
   }

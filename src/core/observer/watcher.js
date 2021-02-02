@@ -68,14 +68,17 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
+    // 有两个Dep数组，不知道干嘛用
     this.deps = []
     this.newDeps = []
     this.depIds = new Set()
     this.newDepIds = new Set()
+    console.log('expOrFn', expOrFn)
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
     // parse expression for getter
+    // 不太明白function类型的expOrFn
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
@@ -99,10 +102,15 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 将当前watcher加入到目标栈中
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      // 获取被依赖的数据，获取数据会触发数据的getter访问器
+      // 这里好像拿的是属性的副本，所以不会触发源属性自身的getter
+      // 真正的属性在vm._data下
+      value = this.getter.call(vm, vm)
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -116,6 +124,7 @@ export default class Watcher {
       if (this.deep) {
         traverse(value)
       }
+      // 弹出当前watcher并切换到下一个watcher
       popTarget()
       this.cleanupDeps()
     }
@@ -126,10 +135,15 @@ export default class Watcher {
    * Add a dependency to this directive.
    */
   addDep (dep: Dep) {
+    console.log('addDep')
     const id = dep.id
     if (!this.newDepIds.has(id)) {
+      // 将该依赖添加到newDeps中
       this.newDepIds.add(id)
       this.newDeps.push(dep)
+      // 如果depIds里没有id，则将该watch添加到dep的subs数组中
+      // 这里应该是要防止重复触发
+      console.log(this.depIds.has(id))
       if (!this.depIds.has(id)) {
         dep.addSub(this)
       }
@@ -143,16 +157,22 @@ export default class Watcher {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
+      // 如果dep在newDep中，则从dep中移除watcher
+      // 不再依赖该数据了就移除，例如删除了依赖该数据的DOM
       if (!this.newDepIds.has(dep.id)) {
+        console.log('remove watcher')
         dep.removeSub(this)
       }
     }
+    console.log(this.depIds)
     let tmp = this.depIds
     this.depIds = this.newDepIds
+    // 这里也是，赋值了又立马清空了
     this.newDepIds = tmp
     this.newDepIds.clear()
     tmp = this.deps
     this.deps = this.newDeps
+    // 这个cleanup的代码看不懂，特别是下面，给数组赋值了又立马清空了
     this.newDeps = tmp
     this.newDeps.length = 0
   }

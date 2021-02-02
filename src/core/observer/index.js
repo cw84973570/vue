@@ -43,13 +43,17 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 将observer实例挂载到value上
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { // 存在__proto__
+        // 代理原生方法
         protoAugment(value, arrayMethods)
       } else {
+        // 没有__proto__的话直接将代理方法挂载到数组value上
         copyAugment(value, arrayMethods, arrayKeys)
       }
+      // 监听数组的属性
       this.observeArray(value)
     } else {
       this.walk(value)
@@ -113,13 +117,14 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   }
   let ob: Observer | void
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    // 已经被监听了
     ob = value.__ob__
   } else if (
     shouldObserve &&
     !isServerRendering() &&
-    (Array.isArray(value) || isPlainObject(value)) &&
+    (Array.isArray(value) || isPlainObject(value)) && // [object Object]
     Object.isExtensible(value) &&
-    !value._isVue
+    !value._isVue // 不是Vue？
   ) {
     ob = new Observer(value)
   }
@@ -140,25 +145,29 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
+  // 创建依赖收集器，每次调用getter都会收集一次依赖
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
+  // 如果是不可配置的，则return
   if (property && property.configurable === false) {
     return
   }
 
   // cater for pre-defined getter/setters
+  // 获取之前定义的getter和setter，第一次是没有getter和setter的
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
-  let childOb = !shallow && observe(val)
+  let childOb = !shallow && observe(val) // 深度监听
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 在这里收集依赖，好像是一开始注册的时候走这里，点击的时候不触发
       if (Dep.target) {
         dep.depend()
         if (childOb) {
@@ -188,6 +197,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
+      // 通知watcher更新视图
       dep.notify()
     }
   })
