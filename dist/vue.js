@@ -4478,8 +4478,8 @@
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
     // 有两个Dep数组，不知道干嘛用
-    this.deps = [];
-    this.newDeps = [];
+    this.deps = []; // 这个是老依赖
+    this.newDeps = []; // 这个好像是更新依赖后重新收集的依赖，收集完毕后需替换掉老依赖，再研究下
     this.depIds = new _Set();
     this.newDepIds = new _Set();
     console.log('expOrFn', expOrFn);
