@@ -1112,6 +1112,7 @@
    * triggers change notification if the property doesn't
    * already exist.
    */
+  // 全局的set
   function set (target, key, val) {
     if (
       (isUndef(target) || isPrimitive(target))
@@ -5480,6 +5481,7 @@
     initAssetRegisters(Vue);
   }
 
+  // 挂载静态属性和方法
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {

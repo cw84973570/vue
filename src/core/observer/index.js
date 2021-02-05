@@ -211,6 +211,7 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+// 全局的set
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
