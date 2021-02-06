@@ -942,9 +942,10 @@
    * collect dependencies and dispatch updates.
    */
   var Observer = function Observer (value) {
-    console.log('observer value', value);
+    // console.log('observer value', value)
+    // value是对象或数组
     this.value = value;
-    this.dep = new Dep();
+    this.dep = new Dep(); // 初始化依赖管理器
     this.vmCount = 0;
     // 将observer实例挂载到value上
     def(value, '__ob__', this);
@@ -956,7 +957,7 @@
         // 没有__proto__的话直接将代理方法挂载到数组value上
         copyAugment(value, arrayMethods, arrayKeys);
       }
-      // 监听数组的属性
+      // 监听数组的元素，只有对象才监听
       this.observeArray(value);
     } else {
       this.walk(value);
@@ -1028,7 +1029,7 @@
       !isServerRendering() &&
       (Array.isArray(value) || isPlainObject(value)) && // [object Object]
       Object.isExtensible(value) &&
-      !value._isVue // 不是Vue？
+      !value._isVue // 不是Vue实例
     ) {
       ob = new Observer(value);
     }
@@ -1056,15 +1057,14 @@
     if (property && property.configurable === false) {
       return
     }
-
+    // console.log('property', property)
     // cater for pre-defined getter/setters
-    // 获取之前定义的getter和setter，第一次是没有getter和setter的
+    // 这里可能是获取自定义的getter和setter,会根据__ob__判断防止重复监听
     var getter = property && property.get;
     var setter = property && property.set;
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
-    console.log(val);
     var childOb = !shallow && observe(val); // 深度监听
     Object.defineProperty(obj, key, {
       enumerable: true,
@@ -4692,12 +4692,14 @@
     if (opts.props) { initProps(vm, opts.props); }
     if (opts.methods) { initMethods(vm, opts.methods); }
     if (opts.data) {
+      // 初始化data，方法在data之前被初始化，也就是说data里可以调方法
       initData(vm);
     } else {
       observe(vm._data = {}, true /* asRootData */);
     }
     if (opts.computed) { initComputed(vm, opts.computed); }
     if (opts.watch && opts.watch !== nativeWatch) {
+      // 初始化自定义watch
       initWatch(vm, opts.watch);
     }
   }
@@ -5134,6 +5136,7 @@
     this._init(options);
   }
 
+  // 挂载_init方法
   initMixin(Vue);
   stateMixin(Vue);
   eventsMixin(Vue);
@@ -5459,6 +5462,7 @@
     Vue.nextTick = nextTick;
 
     // 2.6 explicit observable API
+    // 可以用于小型项目共享数据的监听
     Vue.observable = function (obj) {
       observe(obj);
       return obj

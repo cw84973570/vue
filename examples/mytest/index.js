@@ -17,6 +17,7 @@ Vue.component('child', {
 const app = new Vue({
   el: '#app',
   data () {
+    this.hello()
     return {
       message: '共点击了0次',
       count: 0,
@@ -29,15 +30,16 @@ const app = new Vue({
       obj: {
         a: 1,
         b: 2
-      }
+      },
+      obj2: {}
     }
   },
   created() {
-    this.obj.c = 3
+    this.obj2 = this.obj
   },
   watch: {
     message () {
-      console.log('侦测到点击！')
+      console.log('侦测到点击！！')
     },
     list () {
       console.log('list')
@@ -58,6 +60,9 @@ const app = new Vue({
       // 触发reactiveSetter
       this.message = `共点击了${++this.count}次`
       // this.message = `共点击了${++this.count}次`\
+    },
+    hello () {
+      console.log('Hello Ned')
     }
   }
 })

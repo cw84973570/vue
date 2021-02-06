@@ -46,6 +46,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   Vue.nextTick = nextTick
 
   // 2.6 explicit observable API
+  // 可以用于小型项目共享数据的监听
   Vue.observable = <T>(obj: T): T => {
     observe(obj)
     return obj

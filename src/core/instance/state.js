@@ -51,12 +51,14 @@ export function initState (vm: Component) {
   if (opts.props) initProps(vm, opts.props)
   if (opts.methods) initMethods(vm, opts.methods)
   if (opts.data) {
+    // 初始化data，方法在data之前被初始化，也就是说data里可以调方法
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
   if (opts.watch && opts.watch !== nativeWatch) {
+    // 初始化自定义watch
     initWatch(vm, opts.watch)
   }
 }
