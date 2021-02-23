@@ -1,7 +1,7 @@
 
 Vue.component('child', {
   // 这里实际的方法是getter，祖先类的方法是间接调用的
-  inject: ['change', 'foo', 'bar'], // 依赖注入，将方法的this绑定到了父元素上，不知道是怎么实现的
+  inject: ['change', 'foo', 'bar'], // 依赖注入，方法的this在声明的时候就已经绑定到祖先元素上，所以这里的this指向祖先元素
   template: `
     <div>
       <button @click="$parent.change()">调用父组件方法</button>
@@ -18,7 +18,7 @@ const app = new Vue({
   el: '#app',
   data () {
     this.hello()
-    return {
+    const obj = {
       message: '共点击了0次',
       count: 0,
       test: 'test',
@@ -29,20 +29,49 @@ const app = new Vue({
       ],
       obj: {
         a: 1,
-        b: 2
+        b: 2,
+        c: { c: 1 }
       },
-      obj2: {}
+    }
+    let val = {
+      foo2: 'foo2'
+    }
+    Object.defineProperty(obj, 'foo1', {
+      get () {
+        console.log('get')
+        return val
+      },
+      enumerable: true,
+      configurable: true,
+      // set (newVal) {
+      //   console.log('set')
+      //   val = newVal
+      // }
+    })
+    return obj
+  },
+  computed: {
+    message1 () {
+      return this.message + ',' + this.count
     }
   },
   created() {
     this.obj2 = this.obj
+    this.list.push(1)
   },
   watch: {
-    message () {
+    message (oldVal, newVal) {
       console.log('侦测到点击！！')
+      console.log(oldVal, newVal)
+      console.log(this.message)
     },
-    list () {
-      console.log('list')
+    obj: {
+      handler () {
+        console.log('obj')
+      }
+    },
+    foo1 () {
+      console.log('foo')
     }
   },
   provide: function () {

@@ -88,6 +88,7 @@ function flushSchedulerQueue () {
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
+      // 调用beforeUpdate钩子
       watcher.before()
     }
     id = watcher.id

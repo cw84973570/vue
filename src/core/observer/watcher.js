@@ -23,6 +23,7 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+// 不知道watcher类是什么时候创建的
 export default class Watcher {
   vm: Component;
   expression: string;
@@ -51,6 +52,7 @@ export default class Watcher {
   ) {
     this.vm = vm
     if (isRenderWatcher) {
+      // 视图渲染的watcher，$forceUpdate方法会强制这个watcher刷新
       vm._watcher = this
     }
     vm._watchers.push(this)
@@ -68,12 +70,11 @@ export default class Watcher {
     this.id = ++uid // uid for batching
     this.active = true
     this.dirty = this.lazy // for lazy watchers
-    // 有两个Dep数组，不知道干嘛用
     this.deps = [] // 这个是老依赖
     this.newDeps = [] // 这个好像是更新依赖后重新收集的依赖，收集完毕后需替换掉老依赖，再研究下
     this.depIds = new Set()
     this.newDepIds = new Set()
-    console.log('expOrFn', expOrFn)
+    // console.log('expOrFn', expOrFn)
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()
       : ''
@@ -94,8 +95,8 @@ export default class Watcher {
       }
     }
     this.value = this.lazy
-      ? undefined
-      : this.get()
+    ? undefined
+    : this.get()
   }
 
   /**
@@ -109,6 +110,7 @@ export default class Watcher {
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
       value = this.getter.call(vm, vm)
+      // console.log(value)
     } catch (e) {
       if (this.user) {
         handleError(e, vm, `getter for watcher "${this.expression}"`)
@@ -132,7 +134,7 @@ export default class Watcher {
    * Add a dependency to this directive.
    */
   addDep (dep: Dep) {
-    console.log('addDep')
+    // console.log('addDep')
     const id = dep.id
     if (!this.newDepIds.has(id)) {
       // 将该依赖添加到newDeps中
@@ -140,7 +142,6 @@ export default class Watcher {
       this.newDeps.push(dep)
       // 如果depIds里没有id，则将该watch添加到dep的subs数组中
       // 这里应该是要防止重复触发
-      console.log(this.depIds.has(id))
       if (!this.depIds.has(id)) {
         dep.addSub(this)
       }
@@ -154,22 +155,21 @@ export default class Watcher {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
-      // 如果dep在newDep中，则从dep中移除watcher
       // 不再依赖该数据了就移除，例如删除了依赖该数据的DOM
+      // 在新的依赖中不存在则移除
       if (!this.newDepIds.has(dep.id)) {
-        console.log('remove watcher')
+        // console.log('remove watcher')
         dep.removeSub(this)
       }
     }
-    console.log(this.depIds)
+    // console.log(this.depIds)
+    // 这里可能有多个变量引用depIds和deps，所以要赋值再清空
     let tmp = this.depIds
     this.depIds = this.newDepIds
-    // 这里也是，赋值了又立马清空了
     this.newDepIds = tmp
     this.newDepIds.clear()
     tmp = this.deps
     this.deps = this.newDeps
-    // 这个cleanup的代码看不懂，特别是下面，给数组赋值了又立马清空了
     this.newDeps = tmp
     this.newDeps.length = 0
   }
@@ -179,6 +179,7 @@ export default class Watcher {
    * Will be called when a dependency changes.
    */
   update () {
+    // console.log('update', this.sync)
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true
@@ -195,7 +196,10 @@ export default class Watcher {
    */
   run () {
     if (this.active) {
+      // 观察dom时没有value
+      // dom在这一步更新
       const value = this.get()
+      // value发生变化才会执行回调
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -207,6 +211,7 @@ export default class Watcher {
         // set new value
         const oldValue = this.value
         this.value = value
+        // user表示用户自定义的，没有user的例如computed
         if (this.user) {
           try {
             this.cb.call(this.vm, value, oldValue)

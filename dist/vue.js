@@ -732,12 +732,14 @@
   };
 
   Dep.prototype.depend = function depend () {
+    // console.log(this)
     if (Dep.target) {
       Dep.target.addDep(this);
     }
   };
 
   Dep.prototype.notify = function notify () {
+    // console.log(this)
     // stabilize the subscriber list first
     var subs = this.subs.slice();
     if ( !config.async) {
@@ -762,7 +764,7 @@
   function pushTarget (target) {
     // 将当前元素加入到目标栈中
     // target不是必传参数
-    console.log('watcher', target);
+    // console.log('watcher', target)
     targetStack.push(target);
     Dep.target = target;
   }
@@ -874,6 +876,9 @@
   // 数组原型
   var arrayProto = Array.prototype;
   // 在arrayMethods重定义数组方法
+  // 数组的这些方法做了个中间层去间接调用
+  // 原来是arr.method => arr.__proto__.method = Array.prototype.method
+  // 现在是arr.method => arr.__proto__.method = arrayMethods.method => Array.prototype.method
   var arrayMethods = Object.create(arrayProto);
 
   var methodsToPatch = [
@@ -945,7 +950,9 @@
     // console.log('observer value', value)
     // value是对象或数组
     this.value = value;
+    // 这个dep的notify在调用$set方法和改变数组的数组方法会触发
     this.dep = new Dep(); // 初始化依赖管理器
+    this.dep.value = value;
     this.vmCount = 0;
     // 将observer实例挂载到value上
     def(value, '__ob__', this);
@@ -1050,6 +1057,8 @@
     shallow
   ) {
     var dep = new Dep();
+    // console.log(key)
+    dep.key = key;
     // 创建依赖收集器，每次调用getter都会收集一次依赖
 
     var property = Object.getOwnPropertyDescriptor(obj, key);
@@ -1065,16 +1074,23 @@
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
-    var childOb = !shallow && observe(val); // 深度监听
+    // if (key === 'foo1') {
+    //   console.log(obj[key], val)
+    //   val = undefined
+    // }
+    var childOb = !shallow && observe(val); // 如果val是对象，则深度监听
     Object.defineProperty(obj, key, {
       enumerable: true,
       configurable: true,
       get: function reactiveGetter () {
         var value = getter ? getter.call(obj) : val;
         // 在这里收集依赖，好像是一开始注册的时候走这里，点击的时候不触发
+        // console.log('target', Dep.target)
         if (Dep.target) {
           dep.depend();
+          // 有setter收集嵌套依赖，没setter不收集
           if (childOb) {
+            // 收集嵌套对象的依赖
             childOb.dep.depend();
             if (Array.isArray(value)) {
               dependArray(value);
@@ -1087,13 +1103,16 @@
         var value = getter ? getter.call(obj) : val;
         /* eslint-disable no-self-compare */
         if (newVal === value || (newVal !== newVal && value !== value)) {
-          return
+          return // 如果value没变化或者其中一个值是NaN
         }
         /* eslint-enable no-self-compare */
         if ( customSetter) {
           customSetter();
         }
         // #7981: for accessor properties without setter
+        // 这里表示属性只读，不可写
+        // 与writable等于false的区别是属性本质上是可写的，但是没有暴露给用户
+        // 例如直接修改val的值，但是val不会直接暴露给用户
         if (getter && !setter) { return }
         if (setter) {
           setter.call(obj, newVal);
@@ -4000,6 +4019,7 @@
       // updated in a parent's updated hook.
     };
 
+    // 这个好像是把所有的watcher更新一遍
     Vue.prototype.$forceUpdate = function () {
       var vm = this;
       if (vm._watcher) {
@@ -4107,6 +4127,7 @@
     // we set this to vm._watcher inside the watcher's constructor
     // since the watcher's initial patch may call $forceUpdate (e.g. inside child
     // component's mounted hook), which relies on vm._watcher being already defined
+    // 视图的watcher
     new Watcher(vm, updateComponent, noop, {
       before: function before () {
         if (vm._isMounted && !vm._isDestroyed) {
@@ -4340,6 +4361,7 @@
     for (index = 0; index < queue.length; index++) {
       watcher = queue[index];
       if (watcher.before) {
+        // 调用beforeUpdate钩子
         watcher.before();
       }
       id = watcher.id;
@@ -4452,6 +4474,7 @@
    * and fires callback when the expression value changes.
    * This is used for both the $watch() api and directives.
    */
+  // 不知道watcher类是什么时候创建的
   var Watcher = function Watcher (
     vm,
     expOrFn,
@@ -4461,6 +4484,7 @@
   ) {
     this.vm = vm;
     if (isRenderWatcher) {
+      // 视图渲染的watcher，$forceUpdate方法会强制这个watcher刷新
       vm._watcher = this;
     }
     vm._watchers.push(this);
@@ -4478,12 +4502,11 @@
     this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
-    // 有两个Dep数组，不知道干嘛用
     this.deps = []; // 这个是老依赖
     this.newDeps = []; // 这个好像是更新依赖后重新收集的依赖，收集完毕后需替换掉老依赖，再研究下
     this.depIds = new _Set();
     this.newDepIds = new _Set();
-    console.log('expOrFn', expOrFn);
+    // console.log('expOrFn', expOrFn)
     this.expression =  expOrFn.toString()
       ;
     // parse expression for getter
@@ -4503,8 +4526,8 @@
       }
     }
     this.value = this.lazy
-      ? undefined
-      : this.get();
+    ? undefined
+    : this.get();
   };
 
   /**
@@ -4518,6 +4541,7 @@
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
       value = this.getter.call(vm, vm);
+      // console.log(value)
     } catch (e) {
       if (this.user) {
         handleError(e, vm, ("getter for watcher \"" + (this.expression) + "\""));
@@ -4541,7 +4565,7 @@
    * Add a dependency to this directive.
    */
   Watcher.prototype.addDep = function addDep (dep) {
-    console.log('addDep');
+    // console.log('addDep')
     var id = dep.id;
     if (!this.newDepIds.has(id)) {
       // 将该依赖添加到newDeps中
@@ -4549,7 +4573,6 @@
       this.newDeps.push(dep);
       // 如果depIds里没有id，则将该watch添加到dep的subs数组中
       // 这里应该是要防止重复触发
-      console.log(this.depIds.has(id));
       if (!this.depIds.has(id)) {
         dep.addSub(this);
       }
@@ -4563,22 +4586,21 @@
     var i = this.deps.length;
     while (i--) {
       var dep = this.deps[i];
-      // 如果dep在newDep中，则从dep中移除watcher
       // 不再依赖该数据了就移除，例如删除了依赖该数据的DOM
+      // 在新的依赖中不存在则移除
       if (!this.newDepIds.has(dep.id)) {
-        console.log('remove watcher');
+        // console.log('remove watcher')
         dep.removeSub(this);
       }
     }
-    console.log(this.depIds);
+    // console.log(this.depIds)
+    // 这里可能有多个变量引用depIds和deps，所以要赋值再清空
     var tmp = this.depIds;
     this.depIds = this.newDepIds;
-    // 这里也是，赋值了又立马清空了
     this.newDepIds = tmp;
     this.newDepIds.clear();
     tmp = this.deps;
     this.deps = this.newDeps;
-    // 这个cleanup的代码看不懂，特别是下面，给数组赋值了又立马清空了
     this.newDeps = tmp;
     this.newDeps.length = 0;
   };
@@ -4588,6 +4610,7 @@
    * Will be called when a dependency changes.
    */
   Watcher.prototype.update = function update () {
+    // console.log('update', this.sync)
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true;
@@ -4604,7 +4627,10 @@
    */
   Watcher.prototype.run = function run () {
     if (this.active) {
+      // 观察dom时没有value
+      // dom在这一步更新
       var value = this.get();
+      // value发生变化才会执行回调
       if (
         value !== this.value ||
         // Deep watchers and watchers on Object/Arrays should fire even
@@ -4616,6 +4642,7 @@
         // set new value
         var oldValue = this.value;
         this.value = value;
+        // user表示用户自定义的，没有user的例如computed
         if (this.user) {
           try {
             this.cb.call(this.vm, value, oldValue);
@@ -4827,6 +4854,7 @@
 
       if (!isSSR) {
         // create internal watcher for the computed property.
+        // computed的watcher
         watchers[key] = new Watcher(
           vm,
           getter || noop,
@@ -4996,6 +5024,7 @@
       }
       options = options || {};
       options.user = true;
+      // 这里创建自定义watch
       var watcher = new Watcher(vm, expOrFn, cb, options);
       if (options.immediate) {
         try {

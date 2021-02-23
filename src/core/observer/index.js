@@ -43,7 +43,9 @@ export class Observer {
     // console.log('observer value', value)
     // value是对象或数组
     this.value = value
+    // 这个dep的notify在调用$set方法和改变数组的数组方法会触发
     this.dep = new Dep() // 初始化依赖管理器
+    this.dep.value = value
     this.vmCount = 0
     // 将observer实例挂载到value上
     def(value, '__ob__', this)
@@ -149,6 +151,8 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
+  // console.log(key)
+  dep.key = key
   // 创建依赖收集器，每次调用getter都会收集一次依赖
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
@@ -164,16 +168,23 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-  let childOb = !shallow && observe(val) // 深度监听
+  // if (key === 'foo1') {
+  //   console.log(obj[key], val)
+  //   val = undefined
+  // }
+  let childOb = !shallow && observe(val) // 如果val是对象，则深度监听
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       // 在这里收集依赖，好像是一开始注册的时候走这里，点击的时候不触发
+      // console.log('target', Dep.target)
       if (Dep.target) {
         dep.depend()
+        // 有setter收集嵌套依赖，没setter不收集
         if (childOb) {
+          // 收集嵌套对象的依赖
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)
@@ -186,13 +197,16 @@ export function defineReactive (
       const value = getter ? getter.call(obj) : val
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {
-        return
+        return // 如果value没变化或者其中一个值是NaN
       }
       /* eslint-enable no-self-compare */
       if (process.env.NODE_ENV !== 'production' && customSetter) {
         customSetter()
       }
       // #7981: for accessor properties without setter
+      // 这里表示属性只读，不可写
+      // 与writable等于false的区别是属性本质上是可写的，但是没有暴露给用户
+      // 例如直接修改val的值，但是val不会直接暴露给用户
       if (getter && !setter) return
       if (setter) {
         setter.call(obj, newVal)

@@ -31,12 +31,14 @@ export default class Dep {
   }
 
   depend () {
+    // console.log(this)
     if (Dep.target) {
       Dep.target.addDep(this)
     }
   }
 
   notify () {
+    // console.log(this)
     // stabilize the subscriber list first
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
@@ -62,7 +64,7 @@ const targetStack = []
 export function pushTarget (target: ?Watcher) {
   // 将当前元素加入到目标栈中
   // target不是必传参数
-  console.log('watcher', target)
+  // console.log('watcher', target)
   targetStack.push(target)
   Dep.target = target
 }

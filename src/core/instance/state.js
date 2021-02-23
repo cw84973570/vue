@@ -186,6 +186,7 @@ function initComputed (vm: Component, computed: Object) {
 
     if (!isSSR) {
       // create internal watcher for the computed property.
+      // computed的watcher
       watchers[key] = new Watcher(
         vm,
         getter || noop,
@@ -355,6 +356,7 @@ export function stateMixin (Vue: Class<Component>) {
     }
     options = options || {}
     options.user = true
+    // 这里创建自定义watch
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
       try {

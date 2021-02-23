@@ -8,6 +8,9 @@ import { def } from '../util/index'
 // 数组原型
 const arrayProto = Array.prototype
 // 在arrayMethods重定义数组方法
+// 数组的这些方法做了个中间层去间接调用
+// 原来是arr.method => arr.__proto__.method = Array.prototype.method
+// 现在是arr.method => arr.__proto__.method = arrayMethods.method => Array.prototype.method
 export const arrayMethods = Object.create(arrayProto)
 
 const methodsToPatch = [

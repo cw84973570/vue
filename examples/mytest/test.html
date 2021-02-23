@@ -7,8 +7,13 @@
   <script src="../../dist/vue.js"></script>
 </head>
 <body>
+  <!-- <div id="app">
+    <span>{{ message }}</span>
+    <button @click="change">修改</button>
+  </div> -->
   <div id="app">
-    <span v-if="count !== 3">{{ message }}</span>
+    <div>{{ foo1.foo2 }}</div>
+    <span v-if="count !== 3">{{ message1 }}</span>
     <span v-else>点击次数已达上限</span>
     <button @click="change" v-if="count !== 3">修改</button>
     <button @click="count=0;message='共点击了0次'" v-else>重置</button>
