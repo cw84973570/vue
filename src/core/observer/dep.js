@@ -20,6 +20,11 @@ export default class Dep {
   constructor () {
     this.id = uid++
     this.subs = []
+    // if (this.id === 2) {
+    //   setTimeout(() => {
+    //     console.log(this)
+    //   }, 1000)
+    // }
   }
 
   addSub (sub: Watcher) {
@@ -67,6 +72,7 @@ export function pushTarget (target: ?Watcher) {
   // console.log('watcher', target)
   targetStack.push(target)
   Dep.target = target
+  console.log(targetStack[0], targetStack[1])
 }
 
 export function popTarget () {
@@ -74,6 +80,7 @@ export function popTarget () {
   // 将下一个watch挂载到Dep上
   // 好像每次targetStack里只有一个元素
   // 所以targetStack[targetStack.length - 1]是undefined
+  // computed的时候有两个元素
   targetStack.pop()
   Dep.target = targetStack[targetStack.length - 1]
 }

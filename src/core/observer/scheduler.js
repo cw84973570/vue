@@ -134,6 +134,7 @@ function callUpdatedHooks (queue) {
     const watcher = queue[i]
     const vm = watcher.vm
     if (vm._watcher === watcher && vm._isMounted && !vm._isDestroyed) {
+      // 渲染视图的watcher更新了，说明视图更新了，所以调用updated钩子
       callHook(vm, 'updated')
     }
   }
