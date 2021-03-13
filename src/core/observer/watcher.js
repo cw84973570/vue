@@ -23,6 +23,7 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+// monitor(Watcher)
 // 不知道watcher类是什么时候创建的
 export default class Watcher {
   vm: Component;
@@ -62,6 +63,8 @@ export default class Watcher {
       this.user = !!options.user
       this.lazy = !!options.lazy
       this.sync = !!options.sync
+      // 在视图渲染前调用beforeUpdate
+      // 视图渲染watcher专用钩子
       this.before = options.before
     } else {
       this.deep = this.user = this.lazy = this.sync = false
@@ -69,6 +72,7 @@ export default class Watcher {
     this.cb = cb
     this.id = ++uid // uid for batching
     this.active = true
+    // computed的watcher都是lazy的
     this.dirty = this.lazy // for lazy watchers
     this.deps = [] // 这个是老依赖
     this.newDeps = [] // 这个好像是更新依赖后重新收集的依赖，收集完毕后需替换掉老依赖，再研究下
@@ -109,6 +113,9 @@ export default class Watcher {
     const vm = this.vm
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
+      // 视图的watcher是渲染函数
+      // data是返回属性的方法，例如form.status就返回vm.form.status，此时会触发访问描述器的get
+      // computed的watcher就是computed的方法
       value = this.getter.call(vm, vm)
       // console.log(value)
     } catch (e) {
@@ -181,7 +188,11 @@ export default class Watcher {
   update () {
     // console.log('update', this.sync)
     /* istanbul ignore else */
+    // 如果lazy则只改变dirty的值，而不更新依赖
+    // computed是lazy的，通过调用evaluate更新值
     if (this.lazy) {
+      // dirty说明计算属性依赖的属性发生了改变
+      // 最后调用evaluate一并更新
       this.dirty = true
     } else if (this.sync) {
       this.run()

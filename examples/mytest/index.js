@@ -54,8 +54,11 @@ const app = new Vue({
     return obj
   },
   computed: {
-    message1 () {
-      return this.message + ',' + this.count
+    message1: {
+      get: function (vm) {
+        console.log('vm', vm)
+        return this.message + ',' + this.count
+      }
     }
   },
   created() {
@@ -64,6 +67,24 @@ const app = new Vue({
     })
     this.obj2 = this.obj
     this.list.push(1)
+  },
+  mounted () {
+    this.list[0] = 'b'
+    this.list.push(1)
+    setTimeout(() => {
+      // 只会通知obj.c的watch
+      // this.$set(this.obj.c, 'd', 1)
+      this.list[2].c = 'b'
+      // this.list.push(2)
+    }, 1000)
+    this.$watch('test', function (newVal, oldVal) {
+      console.log(newVal, oldVal)
+    }, {
+      sync: true
+    })
+    // setTimeout(() => {
+    //   this.test = 'test has been changed'
+    // }, 1000)
   },
   watch: {
     message (oldVal, newVal) {
@@ -81,6 +102,9 @@ const app = new Vue({
     },
     foo1 () {
       console.log('foo')
+    },
+    'obj.c' () {
+      console.log('obj.c')
     }
   },
   provide: function () {
@@ -97,6 +121,7 @@ const app = new Vue({
       // 然后调用count的setter设置为1
       // 触发reactiveSetter
       this.message = `共点击了${++this.count}次`
+      this.test = this.count
       // this.message = `共点击了${++this.count}次`\
     },
     hello () {
@@ -107,3 +132,42 @@ const app = new Vue({
     }
   }
 })
+// const obj = {}
+// const watcher = { update () { /* some code */ } }
+// const Dep = { 
+//   watchers: [], 
+//   notify () {
+//     watcher.forEach(watch => {
+//       watch.update()
+//     })
+//   } 
+// }
+// let currentWatcher = null // 正在访问属性的watcher
+// let value = ''
+// Object.defineProtoperty(obj, 'message', {
+//   enumerable: true,
+//   configurable: true,
+//   get: function () {
+//     Dep.watchers.push(currentWatcher)
+//     console.log('某个地方访问了message属性')
+//     return value
+//   },
+//   set: function (newVal) {
+//     console.log('重新设定了访问message属性时返回的值')
+//     value = newVal
+//     Dep.notify()
+//   }
+// })
+// currentWatcher = watcher
+// const message = obj.message // 打印”某个地方访问了message属性“
+// currentWatcher = null
+// obj.message = 'Hello World' // 打印“重新设定了访问message属性时返回的值”
+
+// new Vue({
+//   data () {
+//     return {
+//       message: ''
+//     }
+//   }
+//   /* some code */
+// })

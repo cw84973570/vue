@@ -49,7 +49,7 @@ methodsToPatch.forEach(function (method) {
     // 监听新插入的数据
     if (inserted) ob.observeArray(inserted)
     // notify change
-    // 发布数组发生改变的通知
+    // 通知订阅者更新
     ob.dep.notify()
     return result
   })

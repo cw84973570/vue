@@ -420,8 +420,11 @@ export function createPatchFunction (backend) {
     if (process.env.NODE_ENV !== 'production') {
       checkDuplicateKeys(newCh)
     }
-
+    // 旧Vnode和新Vnode中都还存在未处理的节点
+    // 如果旧Vnode节点都已处理完，这表示新Vnode中剩余的节点都是新增的，新增就完了
+    // 如果新Vnode节点都已处理完，这表示旧Vnode中剩余的节点都是多余的，删除就完了
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      // oldStartVnode是undefined或null
       if (isUndef(oldStartVnode)) {
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
       } else if (isUndef(oldEndVnode)) {
@@ -466,9 +469,11 @@ export function createPatchFunction (backend) {
       }
     }
     if (oldStartIdx > oldEndIdx) {
+      // 旧Vnode先处理完，新增
       refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
       addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
     } else if (newStartIdx > newEndIdx) {
+      // 新Vnode先处理完，删除
       removeVnodes(oldCh, oldStartIdx, oldEndIdx)
     }
   }
@@ -506,10 +511,11 @@ export function createPatchFunction (backend) {
     index,
     removeOnly
   ) {
+    // 新旧节点是否相等
     if (oldVnode === vnode) {
       return
     }
-
+    // vnode.elm不是null或undefined
     if (isDef(vnode.elm) && isDef(ownerArray)) {
       // clone reused vnode
       vnode = ownerArray[index] = cloneVNode(vnode)

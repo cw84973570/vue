@@ -155,6 +155,7 @@ function initData (vm: Component) {
 
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
+  // console.log(Dep.target)
   pushTarget()
   try {
     return data.call(vm, vm)
@@ -249,6 +250,9 @@ function createComputedGetter (key) {
         watcher.evaluate()
       }
       if (Dep.target) {
+        // 把计算属性的watcher的Dep保存到前一个watcher中
+        // 换句话说如果前一个watcher依赖了这个watcher，就相当于订阅了该watcher订阅的属性
+        // 比如视图渲染时依赖了message这个计算属性，那么视图的watcher就依赖了计算属性的watcher
         watcher.depend()
       }
       return watcher.value

@@ -45,7 +45,7 @@ export class Observer {
     this.value = value
     // 这个dep的notify在调用$set方法和改变数组的数组方法会触发
     this.dep = new Dep() // 初始化依赖管理器
-    this.dep.value = value
+    // this.dep.value = value
     this.vmCount = 0
     // 将observer实例挂载到value上
     def(value, '__ob__', this)
@@ -54,7 +54,7 @@ export class Observer {
         // 代理原生方法
         protoAugment(value, arrayMethods)
       } else {
-        // 没有__proto__的话直接将代理方法挂载到数组value上
+        // 如果没有__proto__直接将代理方法挂载到数组value上
         copyAugment(value, arrayMethods, arrayKeys)
       }
       // 监听数组的元素，只有对象才监听
@@ -162,7 +162,6 @@ export function defineReactive (
   }
   // console.log('property', property)
   // cater for pre-defined getter/setters
-  // 这里可能是获取自定义的getter和setter,会根据__ob__判断防止重复监听
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
