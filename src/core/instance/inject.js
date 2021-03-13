@@ -16,6 +16,7 @@ export function initProvide (vm: Component) {
 export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
+    // 依赖注入不需要监听
     toggleObserving(false)
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */

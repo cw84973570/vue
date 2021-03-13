@@ -87,7 +87,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
-  // 这个好像是把所有的watcher更新一遍
+  // 通知渲染视图的watcher更新
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
