@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="../../dist/vue.js"></script>
+</head>
+<body>
+  <!-- <div v-else :key=2>
+    <div>展示dom2</div>
+  </div> -->
+  <div id="app">
+    <div>
+      <div v-for="(item, index) in list" :key="index">{{ item.name }}</div>
+    </div>
+    <button @click="add">新增</button>
+    <button @click="remove">移除</button>
+  </div>
+</body>
+<script src="./index.js"></script>
+</html>

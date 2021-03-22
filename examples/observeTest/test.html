@@ -7,11 +7,8 @@
   <script src="../../dist/vue.js"></script>
 </head>
 <body>
-  <!-- <div id="app">
-    <span>{{ message }}</span>
-    <button @click="change">修改</button>
-  </div> -->
   <div id="app">
+    <!-- 数据监听 -->
     <div>{{ obj.a }}</div>
     <span v-if="count !== 3">{{ message1 }}</span>
     <span v-else>点击次数已达上限</span>

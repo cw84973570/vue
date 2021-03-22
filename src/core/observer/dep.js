@@ -72,7 +72,7 @@ export function pushTarget (target: ?Watcher) {
   // console.log('watcher', target)
   targetStack.push(target)
   Dep.target = target
-  console.log(targetStack[0], targetStack[1])
+  // console.log(targetStack[0], targetStack[1])
 }
 
 export function popTarget () {

@@ -721,6 +721,11 @@
   var Dep = function Dep () {
     this.id = uid++;
     this.subs = [];
+    // if (this.id === 2) {
+    // setTimeout(() => {
+    //   console.log(this)
+    // }, 1000)
+    // }
   };
 
   Dep.prototype.addSub = function addSub (sub) {
@@ -767,6 +772,7 @@
     // console.log('watcher', target)
     targetStack.push(target);
     Dep.target = target;
+    // console.log(targetStack[0], targetStack[1])
   }
 
   function popTarget () {
@@ -774,6 +780,7 @@
     // 将下一个watch挂载到Dep上
     // 好像每次targetStack里只有一个元素
     // 所以targetStack[targetStack.length - 1]是undefined
+    // computed的时候有两个元素
     targetStack.pop();
     Dep.target = targetStack[targetStack.length - 1];
   }
@@ -790,7 +797,7 @@
     componentOptions,
     asyncFactory
   ) {
-    this.tag = tag;
+    this.tag = tag; // 节点名称
     this.data = data;
     this.children = children;
     this.text = text;
@@ -825,6 +832,7 @@
 
   Object.defineProperties( VNode.prototype, prototypeAccessors );
 
+  // 创建注释节点
   var createEmptyVNode = function (text) {
     if ( text === void 0 ) text = '';
 
@@ -834,6 +842,7 @@
     return node
   };
 
+  // 创建文本节点
   function createTextVNode (val) {
     return new VNode(undefined, undefined, undefined, String(val))
   }
@@ -920,7 +929,7 @@
       // 监听新插入的数据
       if (inserted) { ob.observeArray(inserted); }
       // notify change
-      // 发布数组发生改变的通知
+      // 通知订阅者更新
       ob.dep.notify();
       return result
     });
@@ -952,7 +961,7 @@
     this.value = value;
     // 这个dep的notify在调用$set方法和改变数组的数组方法会触发
     this.dep = new Dep(); // 初始化依赖管理器
-    this.dep.value = value;
+    // this.dep.value = value
     this.vmCount = 0;
     // 将observer实例挂载到value上
     def(value, '__ob__', this);
@@ -961,7 +970,7 @@
         // 代理原生方法
         protoAugment(value, arrayMethods);
       } else {
-        // 没有__proto__的话直接将代理方法挂载到数组value上
+        // 如果没有__proto__直接将代理方法挂载到数组value上
         copyAugment(value, arrayMethods, arrayKeys);
       }
       // 监听数组的元素，只有对象才监听
@@ -1068,7 +1077,6 @@
     }
     // console.log('property', property)
     // cater for pre-defined getter/setters
-    // 这里可能是获取自定义的getter和setter,会根据__ob__判断防止重复监听
     var getter = property && property.get;
     var setter = property && property.set;
     if ((!getter || setter) && arguments.length === 2) {
@@ -4407,6 +4415,7 @@
       var watcher = queue[i];
       var vm = watcher.vm;
       if (vm._watcher === watcher && vm._isMounted && !vm._isDestroyed) {
+        // 渲染视图的watcher更新了，说明视图更新了，所以调用updated钩子
         callHook(vm, 'updated');
       }
     }
@@ -4474,6 +4483,7 @@
    * and fires callback when the expression value changes.
    * This is used for both the $watch() api and directives.
    */
+  // monitor(Watcher)
   // 不知道watcher类是什么时候创建的
   var Watcher = function Watcher (
     vm,
@@ -4494,6 +4504,8 @@
       this.user = !!options.user;
       this.lazy = !!options.lazy;
       this.sync = !!options.sync;
+      // 在视图渲染前调用beforeUpdate
+      // 视图渲染watcher专用钩子
       this.before = options.before;
     } else {
       this.deep = this.user = this.lazy = this.sync = false;
@@ -4501,6 +4513,7 @@
     this.cb = cb;
     this.id = ++uid$1; // uid for batching
     this.active = true;
+    // computed的watcher都是lazy的
     this.dirty = this.lazy; // for lazy watchers
     this.deps = []; // 这个是老依赖
     this.newDeps = []; // 这个好像是更新依赖后重新收集的依赖，收集完毕后需替换掉老依赖，再研究下
@@ -4540,6 +4553,9 @@
     var vm = this.vm;
     try {
       // 获取被依赖的数据，获取数据会触发数据的getter访问器
+      // 视图的watcher是渲染函数
+      // data是返回属性的方法，例如form.status就返回vm.form.status，此时会触发访问描述器的get
+      // computed的watcher就是computed的方法
       value = this.getter.call(vm, vm);
       // console.log(value)
     } catch (e) {
@@ -4612,7 +4628,11 @@
   Watcher.prototype.update = function update () {
     // console.log('update', this.sync)
     /* istanbul ignore else */
+    // 如果lazy则只改变dirty的值，而不更新依赖
+    // computed是lazy的，通过调用evaluate更新值
     if (this.lazy) {
+      // dirty说明计算属性依赖的属性发生了改变
+      // 最后调用evaluate一并更新
       this.dirty = true;
     } else if (this.sync) {
       this.run();
@@ -4823,6 +4843,7 @@
 
   function getData (data, vm) {
     // #7573 disable dep collection when invoking data getters
+    // console.log(Dep.target)
     pushTarget();
     try {
       return data.call(vm, vm)
@@ -4917,6 +4938,9 @@
           watcher.evaluate();
         }
         if (Dep.target) {
+          // 把计算属性的watcher的Dep保存到前一个watcher中
+          // 换句话说如果前一个watcher依赖了这个watcher，就相当于订阅了该watcher订阅的属性
+          // 比如视图渲染时依赖了message这个计算属性，那么视图的watcher就依赖了计算属性的watcher
           watcher.depend();
         }
         return watcher.value
@@ -5120,6 +5144,7 @@
   }
 
   function resolveConstructorOptions (Ctor) {
+    // console.log(Ctor.options)
     var options = Ctor.options;
     if (Ctor.super) {
       var superOptions = resolveConstructorOptions(Ctor.super);
@@ -6269,11 +6294,18 @@
       {
         checkDuplicateKeys(newCh);
       }
-
+      console.log(oldCh, newCh);
+      // 旧Vnode和新Vnode中都还存在未处理的节点
+      // 如果旧Vnode节点都已处理完，这表示新Vnode中剩余的节点都是新增的，新增就完了
+      // 如果新Vnode节点都已处理完，这表示旧Vnode中剩余的节点都是多余的，删除就完了
       while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+        console.log(oldStartVnode, 'odlStart');
+        // oldStartVnode是undefined或null
         if (isUndef(oldStartVnode)) {
+          // 如果旧开始node不存在
           oldStartVnode = oldCh[++oldStartIdx]; // Vnode has been moved left
         } else if (isUndef(oldEndVnode)) {
+          // 如果旧结束node不存在
           oldEndVnode = oldCh[--oldEndIdx];
         } else if (sameVnode(oldStartVnode, newStartVnode)) {
           patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx);
@@ -6315,9 +6347,11 @@
         }
       }
       if (oldStartIdx > oldEndIdx) {
+        // 旧Vnode先处理完，新增
         refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm;
         addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue);
       } else if (newStartIdx > newEndIdx) {
+        // 新Vnode先处理完，删除
         removeVnodes(oldCh, oldStartIdx, oldEndIdx);
       }
     }
@@ -6355,10 +6389,11 @@
       index,
       removeOnly
     ) {
+      // 新旧节点是否相等
       if (oldVnode === vnode) {
         return
       }
-
+      // vnode.elm不是null或undefined
       if (isDef(vnode.elm) && isDef(ownerArray)) {
         // clone reused vnode
         vnode = ownerArray[index] = cloneVNode(vnode);

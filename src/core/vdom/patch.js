@@ -420,29 +420,38 @@ export function createPatchFunction (backend) {
     if (process.env.NODE_ENV !== 'production') {
       checkDuplicateKeys(newCh)
     }
+    console.log(oldCh, newCh)
     // 旧Vnode和新Vnode中都还存在未处理的节点
     // 如果旧Vnode节点都已处理完，这表示新Vnode中剩余的节点都是新增的，新增就完了
     // 如果新Vnode节点都已处理完，这表示旧Vnode中剩余的节点都是多余的，删除就完了
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      console.log(oldStartVnode, 'odlStart')
       // oldStartVnode是undefined或null
       if (isUndef(oldStartVnode)) {
+        // 如果旧开始node不存在
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
       } else if (isUndef(oldEndVnode)) {
+        // 如果旧结束node不存在
         oldEndVnode = oldCh[--oldEndIdx]
       } else if (sameVnode(oldStartVnode, newStartVnode)) {
+        // 如果新开始node和旧开始node是同一个node
+        // 对旧node打补丁
         patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
         oldStartVnode = oldCh[++oldStartIdx]
         newStartVnode = newCh[++newStartIdx]
       } else if (sameVnode(oldEndVnode, newEndVnode)) {
+        // 如果旧结束node和新结束node是同一个node
         patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
         oldEndVnode = oldCh[--oldEndIdx]
         newEndVnode = newCh[--newEndIdx]
       } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
+        // 如果旧开始node和新结束node是同一个node
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
         canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
         oldStartVnode = oldCh[++oldStartIdx]
         newEndVnode = newCh[--newEndIdx]
       } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
+        // 如果旧结束node和新开始node是同一个node
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
         canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
         oldEndVnode = oldCh[--oldEndIdx]
