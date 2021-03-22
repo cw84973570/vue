@@ -9,6 +9,9 @@ Vue.component('child', {
       <button @click="change">依赖注入</button>
     </div>
   `,
+  created () {
+    console.log('child')
+  },
   methods: {
 
   }
@@ -59,6 +62,9 @@ const app = new Vue({
     }
   },
   created() {
+    this.$on('hook: created', () => {
+      console.log('parent')
+    })
     this.obj2 = this.obj
     this.list.push(1)
   },
@@ -85,6 +91,9 @@ const app = new Vue({
       console.log('侦测到点击！！')
       console.log(oldVal, newVal)
       console.log(this.message)
+    },
+    message1 () {
+      console.log('message1')
     },
     obj: {
       handler () {
@@ -117,6 +126,9 @@ const app = new Vue({
     },
     hello () {
       console.log('Hello Ned')
+    },
+    Childcreated () {
+      console.log('childCreated')
     }
   }
 })
