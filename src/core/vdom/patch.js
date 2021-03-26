@@ -428,35 +428,42 @@ export function createPatchFunction (backend) {
       console.log(oldStartVnode, 'odlStart')
       // oldStartVnode是undefined或null
       if (isUndef(oldStartVnode)) {
-        // 如果旧开始node不存在
+        // 如果旧开始node不存在，oldStartVnode向后移动一位
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
       } else if (isUndef(oldEndVnode)) {
-        // 如果旧结束node不存在
+        // 如果旧结束node不存在，oldEndVnode向前移动一位
         oldEndVnode = oldCh[--oldEndIdx]
       } else if (sameVnode(oldStartVnode, newStartVnode)) {
         // 如果新开始node和旧开始node是同一个node
         // 对旧node打补丁
         patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+        // 新旧开始node都向后移一位
         oldStartVnode = oldCh[++oldStartIdx]
         newStartVnode = newCh[++newStartIdx]
       } else if (sameVnode(oldEndVnode, newEndVnode)) {
         // 如果旧结束node和新结束node是同一个node
         patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
+        // 新旧结束node都向前移一位
         oldEndVnode = oldCh[--oldEndIdx]
         newEndVnode = newCh[--newEndIdx]
       } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
         // 如果旧开始node和新结束node是同一个node
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
+        // 说明旧开始node被移动到了右边，所以将旧开始node插入到旧结束node的右边
+        // 如果已经是最后一个节点则nextSibling返回null，insertBefore最后一个参数为null则插入到末尾
         canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
         oldStartVnode = oldCh[++oldStartIdx]
         newEndVnode = newCh[--newEndIdx]
       } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
         // 如果旧结束node和新开始node是同一个node
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+        // 说明旧结束节点被移动到了左边，所以将旧开始node插入到旧结束node的左边
         canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
         oldEndVnode = oldCh[--oldEndIdx]
         newStartVnode = newCh[++newStartIdx]
       } else {
+        // 如果新旧node都存在且都不是同一个node
+        // 第一次初始化key的map，即oldKeyToIdx为{ key1: 0, key2: 1 }
         if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
         // 如果新开始node的key存在，则直接获取索引，否则去oldCh里寻找相同node的索引
         idxInOld = isDef(newStartVnode.key)
